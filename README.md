@@ -37,7 +37,7 @@ pip install -e .
 
 export OPENAI_API_KEY=...
 # optional:
-export THOR_VISION_MODEL=gpt-5.5
+export THOR_VISION_MODEL=gpt-6-luna
 export THOR_WHISPER_MODEL=small
 
 thor doctor
@@ -55,6 +55,16 @@ thor read-story "/path/to/story.pdf" --title "Story title"
 ```
 
 It chunks the material, builds structured story memory, and makes it available to the connection agents.
+
+## Find connections
+
+After THOR has watched at least two titles:
+
+```bash
+thor connect --focus "Avengers: Doomsday" --candidates 80 --analyze 30
+```
+
+This first performs cheap cross-title retrieval, then asks the CONTINUITY/HYPOTHESIS agent to inspect the strongest pairs. A separate SKEPTIC agent attacks each proposed connection and returns an adjusted confidence. Reports stay under `.thor/reports/`.
 
 ## Storage
 
@@ -77,4 +87,4 @@ See [AGENTS.md](AGENTS.md).
 
 ## Current state
 
-V0.2 focuses on the ingest/watch/read layer. The next layer is cross-title retrieval, adversarial theory generation, and a graph UI.
+V0.2 includes full-film watching, word-level transcription, story reading, cross-title retrieval, hypothesis generation, and a skeptic pass. The next layer is shot-boundary vision, semantic embeddings, character identity memory, audio/music motifs, and a graph UI.
