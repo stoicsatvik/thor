@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "thor-mcu"
+version = "0.2.0"
+description = "THOR: multimodal cinematic continuity and hypothesis engine"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "openai>=1.0.0",
+  "faster-whisper>=1.1.0",
+  "typer>=0.12.0",
+  "rich>=13.0.0",
+  "pydantic>=2.0.0",
+  "pypdf>=5.0.0",
+]
+
+[project.scripts]
+thor = "thor.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
