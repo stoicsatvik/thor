@@ -77,7 +77,7 @@ def _parse_json(text: str) -> dict[str, Any]:
     text = text.strip()
     fence = chr(96) * 3
     if text.startswith(fence):
-        first_newline = text.find("\\n")
+        first_newline = text.find("\n")
         if first_newline != -1:
             text = text[first_newline + 1 :]
         if text.rstrip().endswith(fence):
@@ -99,7 +99,7 @@ def _parse_json(text: str) -> dict[str, Any]:
 
 class OpenAIVisionReader:
     def __init__(self, model: str | None = None) -> None:
-        self.model = model or os.getenv("THOR_VISION_MODEL", "gpt-5.5")
+        self.model = model or os.getenv("THOR_VISION_MODEL", "gpt-6-luna")
         self.client = OpenAI()
 
     def watch(self, title: str, window: ViewingWindow) -> dict[str, Any]:
@@ -107,9 +107,9 @@ class OpenAIVisionReader:
             {
                 "type": "input_text",
                 "text": (
-                    f"TITLE: {title}\\n"
-                    f"WINDOW: {window.start:.3f}s to {window.end:.3f}s\\n\\n"
-                    "TIMESTAMPED DIALOGUE:\\n"
+                    f"TITLE: {title}\n"
+                    f"WINDOW: {window.start:.3f}s to {window.end:.3f}s\n\n"
+                    "TIMESTAMPED DIALOGUE:\n"
                     f"{window.transcript_text or '[no intelligible dialogue]'}"
                 ),
             }
@@ -129,9 +129,9 @@ class OpenAIVisionReader:
             model=self.model,
             instructions=STORY_INSTRUCTIONS,
             input=(
-                f"TITLE: {title}\\n"
-                f"CHUNK: {chunk_index}\\n\\n"
-                f"SOURCE TEXT:\\n{text}"
+                f"TITLE: {title}\n"
+                f"CHUNK: {chunk_index}\n\n"
+                f"SOURCE TEXT:\n{text}"
             ),
         )
         return _parse_json(response.output_text)
