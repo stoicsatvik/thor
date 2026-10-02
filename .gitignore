@@ -1,0 +1,25 @@
+.venv/
+__pycache__/
+*.py[cod]
+.env
+.DS_Store
+
+# THOR working memory: contains local media derivatives/transcripts.
+.thor/
+
+# Never commit source media or copyrighted text dumps.
+*.mp4
+*.mkv
+*.mov
+*.avi
+*.m4v
+*.mp3
+*.wav
+*.flac
+*.srt
+*.vtt
+*.ass
+media/
+transcripts/
+scripts/
+screenplays/
