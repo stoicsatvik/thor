@@ -9,6 +9,7 @@ from rich.console import Console
 from rich.table import Table
 
 from .pipeline import library, read_story, watch_movie
+from .connections import connect_library
 
 
 app = typer.Typer(
@@ -78,6 +79,23 @@ def read_story_command(
         title=title,
         chunk_words=chunk_words,
         overlap_words=overlap_words,
+    )
+
+
+@app.command("connect")
+def connect(
+    focus: str = typer.Option("Avengers: Doomsday", "--focus"),
+    candidates: int = typer.Option(50, min=1),
+    analyze: int = typer.Option(20, min=1),
+    skeptic: bool = typer.Option(True, "--skeptic/--no-skeptic"),
+) -> None:
+    """Find cross-film echoes, generate hypotheses, then attack them."""
+    connect_library(
+        db=library(),
+        focus=focus,
+        candidates=candidates,
+        analyze=analyze,
+        skeptic=skeptic,
     )
 
 
