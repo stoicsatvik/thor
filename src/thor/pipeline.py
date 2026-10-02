@@ -9,7 +9,7 @@ from pathlib import Path
 from pypdf import PdfReader
 from rich.console import Console
 
-from .media import extract_audio, extract_storyboard, probe_duration
+from .media import detect_shot_boundaries, extract_audio, extract_frames_at, probe_duration, sample_times_from_shots
 from .models import Observation, ViewingWindow
 from .storage import Library
 from .transcribe import transcribe_words, words_for_window
@@ -41,7 +41,8 @@ def watch_movie(
     video: Path,
     title: str,
     window_seconds: float = 60.0,
-    frames_per_window: int = 6,
+    max_visual_gap: float = 5.0,
+    scene_threshold: float = 0.30,
     start_minute: int = 0,
     limit_minutes: int | None = None,
     resume: bool = True,
@@ -67,6 +68,19 @@ def watch_movie(
     db.replace_words(source_id, words)
     console.print(f"words={len(words):,}")
 
+    shot_cache = source_dir / "shot_boundaries.json"
+    if shot_cache.exists():
+        shot_boundaries = json.loads(shot_cache.read_text(encoding="utf-8"))
+    else:
+        console.print("Detecting shot boundaries across the full video...")
+        shot_boundaries = detect_shot_boundaries(video, threshold=scene_threshold)
+        source_dir.mkdir(parents=True, exist_ok=True)
+        shot_cache.write_text(
+            json.dumps(shot_boundaries, indent=2),
+            encoding="utf-8",
+        )
+    console.print(f"shot_intervals={max(0, len(shot_boundaries) - 1):,}")
+
     reader = OpenAIVisionReader()
     total_windows = math.ceil(duration / window_seconds)
     first = max(0, int((start_minute * 60) // window_seconds))
@@ -83,12 +97,16 @@ def watch_movie(
         start = index * window_seconds
         end = min(duration, start + window_seconds)
         frame_dir = source_dir / "frames" / f"{index:04d}"
-        frames = extract_storyboard(
-            video=video,
+        frame_times = sample_times_from_shots(
+            boundaries=shot_boundaries,
             start=start,
             end=end,
+            max_gap=max_visual_gap,
+        )
+        frames = extract_frames_at(
+            video=video,
+            times=frame_times,
             out_dir=frame_dir,
-            frame_count=frames_per_window,
         )
         window = ViewingWindow(
             index=index,
@@ -100,7 +118,8 @@ def watch_movie(
 
         console.print(
             f"watch {index + 1:04d}/{total_windows:04d} "
-            f"[{start / 60:.2f}-{end / 60:.2f} min]"
+            f"[{start / 60:.2f}-{end / 60:.2f} min] "
+            f"visual_samples={len(frames)}"
         )
         payload = reader.watch(title, window)
         obs = Observation(
