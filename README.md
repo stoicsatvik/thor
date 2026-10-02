@@ -9,11 +9,13 @@ THOR is designed to **actually inspect the source material** instead of hallucin
 For a local movie file THOR:
 
 1. reads the real audio track and creates **word-level timestamps** with Whisper,
-2. divides the film into 60-second viewing windows,
-3. extracts multiple frames from every window,
-4. gives the frames + timestamped dialogue to a vision-language model,
-5. stores a structured observation for that exact minute,
-6. later compares observations across films, stories and characters.
+2. detects scene changes across the full film,
+3. divides the film into 60-second viewing windows,
+4. samples **every detected shot** and also samples inside long shots so motion-heavy scenes are not represented by one lonely JPEG,
+5. labels every visual sample with its exact timestamp,
+6. gives those images + every timestamped spoken word to a vision-language model,
+7. stores a structured observation for that exact minute,
+8. later compares observations across films, stories and characters.
 
 The unit of evidence is always tied back to a source + timestamp.
 
@@ -39,9 +41,14 @@ export OPENAI_API_KEY=...
 # optional:
 export THOR_VISION_MODEL=gpt-6-luna
 export THOR_WHISPER_MODEL=small
+# optional: use a stronger model only for connection adjudication
+export THOR_REASONING_MODEL=gpt-6.1-sol
 
 thor doctor
 thor watch "/path/to/movie.mp4" --title "Movie title"
+
+# denser visual coverage inside long shots:
+thor watch "/path/to/movie.mp4" --title "Movie title" --max-visual-gap 2.0
 ```
 
 THOR writes private working data to `.thor/`, which is gitignored.
@@ -87,4 +94,8 @@ See [AGENTS.md](AGENTS.md).
 
 ## Current state
 
-V0.2 includes full-film watching, word-level transcription, story reading, cross-title retrieval, hypothesis generation, and a skeptic pass. The next layer is shot-boundary vision, semantic embeddings, character identity memory, audio/music motifs, and a graph UI.
+V0.2 includes full-film shot detection, dense timestamped vision, word-level transcription, story reading, cross-title retrieval, hypothesis generation, and a skeptic pass. The next layer is semantic embeddings, persistent character identity memory, audio/music motifs, camera-motion understanding, and a graph UI.
+
+### Important limitation
+
+Current OpenAI vision models accept image inputs but not raw video input, so THOR converts video into dense, timestamped visual evidence rather than handing an MP4 directly to the model. The default path covers every detected shot and inserts extra samples into long shots. It is materially closer to "watching" than fixed screenshots, but true continuous motion understanding remains a separate layer.
