@@ -114,8 +114,23 @@ class OpenAIVisionReader:
                 ),
             }
         ]
+        detail = os.getenv("THOR_IMAGE_DETAIL", "low")
         for frame in window.frame_paths:
-            content.append({"type": "input_image", "image_url": _data_url(Path(frame))})
+            frame_path = Path(frame)
+            timestamp = frame_path.stem.split("_")[-1]
+            content.append(
+                {
+                    "type": "input_text",
+                    "text": f"FRAME_TIMESTAMP_SECONDS: {timestamp}",
+                }
+            )
+            content.append(
+                {
+                    "type": "input_image",
+                    "image_url": _data_url(frame_path),
+                    "detail": detail,
+                }
+            )
 
         response = self.client.responses.create(
             model=self.model,
